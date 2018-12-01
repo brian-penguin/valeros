@@ -1,8 +1,25 @@
 {% extends "base.html" %}
+
 {% block content %}
+
 <div class="row">
-  <div class="col-sm-12">
-    {{spells}}
-  </div>
+    <div class="col-sm-12">
+        <table>
+            <tr>
+                {% for header in spell-keys %}
+                <th> {{ header }} </th>
+                {% endfor %}
+            </tr>
+
+            {% for spell in spells %}
+            <tr>
+                {% for val in spell %}
+                <td> {{ val }} </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </div>
+
 {% endblock %}
