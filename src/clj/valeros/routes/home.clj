@@ -1,4 +1,5 @@
 (ns valeros.routes.home
+  (:use clojure-csv.core)
   (:require [valeros.layout :as layout]
             [valeros.db.core :as db]
             [compojure.core :refer [defroutes GET]]
@@ -12,24 +13,29 @@
 (defn about-page []
   (layout/render "about.html"))
 
-(defn memoize [f]
-  (let [mem (atom {})]
-    (fn [& args]
-      (if-let [e (find @mem args)]
-        (val e)
-        (let [ret (apply f args)]
-          (swap! mem assoc args ret)
-          ret)))))
+(def spell-csv "docs/spells.csv")
 
-(defn spells []
-  (-> "docs/spells.csv" io/resource slurp))
+(defn csv-data [file-location]
+  "Get the spells from the csv file in a list. First row is the headers"
+  (let [csv-file (slurp (io/resource file-location))]
+  (parse-csv csv-file)))
 
-(def spells
-  (memoize spells))
+;; This may be more accurate to a respoinse we might get outof a database
+(defn csv-data->maps [csv-data]
+  "Convert data to maps where the keys are the headers"
+  (map zipmap
+       (->> (first csv-data)
+            (map keyword)
+            repeat)
+       (rest csv-data)))
 
 (defn spell-page []
-  (layout/render
-   "spells.html" {:spells (spells)}))
+  "pass in the spell keys and spell-data for building a table"
+  (let [spell-data (csv-data spell-csv)
+        spell-keys (first spell-data)
+        spells (rest spell-data)]
+    (layout/render
+     "spells.html" {:spell-keys spell-keys, :spells spell-data})))
 
 (defroutes home-routes
   (GET "/" [] (home-page))
